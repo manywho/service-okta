@@ -147,7 +147,7 @@ public class AuthorizationManager {
         Client client = OktaClientFactory.create(configuration);
 
         // Build the required AuthorizationGroup objects out of the groups that Okta tells us about
-        List<AuthorizationGroup> groups = Streams.asStream(client.listGroups(null, buildFilterStringFromRequest(request, "GroupAuthorizationGroup", "AuthenticationId"), null).iterator())
+        List<AuthorizationGroup> groups = Streams.asStream(client.listGroups(getSearchQuery(request), buildFilterStringFromRequest(request, "GroupAuthorizationGroup", "AuthenticationId"), null).iterator())
                 .map(group -> new AuthorizationGroup(group.getId(), group.getProfile().getName(), group.getProfile().getDescription()))
                 .collect(Collectors.toList());
 
@@ -182,6 +182,13 @@ public class AuthorizationManager {
         return filter;
     }
 
+    private String getSearchQuery(ObjectDataRequest objectDataRequest) {
+        if (objectDataRequest.getListFilter().hasSearch()) {
+            return objectDataRequest.getListFilter().getSearch();
+        }
+        return null;
+    }
+
     public ObjectDataResponse userAttributes() {
         return new ObjectDataResponse(
                 typeBuilder.from(new AuthorizationAttribute("user", "User"))
@@ -194,7 +201,7 @@ public class AuthorizationManager {
         Client client = OktaClientFactory.create(configuration);
 
         // Build the required AuthorizationUser objects out of the users that Okta tells us about
-        List<AuthorizationUser> users = Streams.asStream(client.listUsers(null, buildFilterStringFromRequest(request, "GroupAuthorizationUser", "AuthenticationId"), null, null, null).iterator())
+        List<AuthorizationUser> users = Streams.asStream(client.listUsers(getSearchQuery(request), buildFilterStringFromRequest(request, "GroupAuthorizationUser", "AuthenticationId"), null, null, null).iterator())
                 .map(user -> new AuthorizationUser(
                         user.getId(),
                         String.format("%s %s", user.getProfile().getFirstName(), user.getProfile().getLastName()),
